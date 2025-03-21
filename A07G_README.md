@@ -34,6 +34,8 @@ HRS 06 - A Li-Ion battery (3.7V nominal voltage) Shall be used as the power supp
 
 HRS 07 - A limit switch shall be used with IR sensor to cross validate that the cell phone is placed in the box
 
+HRS 08 - A 6-DOF IMU supporting I2C connection shall be used to detect whether the box has been moved or not，>10Hz sample rate is enough.
+
 ### 1.2 SRS
 
 #### 1.2.1 Overview
@@ -48,7 +50,7 @@ This project is for students seeking to build better learning habits, which coul
 
 #### 1.2.3 Functionality
 
-SRS 01 – The IR sensor and limit switch shall continuously detect the presence of objects inside the box when the time is set and before the box is closed.
+SRS 01 – The IR sensor and limit switch shall continuously detect the presence of objects inside the box when the time is set and before the box is closed(in Prepare Stage).
 
 SRS 02 - The Device shall receive commands from mobile phones using WiFi.
 
@@ -59,6 +61,8 @@ SRS 04 - The electromagnet shall be controlled according to the status of IR sen
 SRS 05 - The buzzer should play sound to inform the user to study when reaching the scheduled study time.
 
 SRS 06 - The buzzer should play sound to inform the user to rest when the setting time period end.
+
+SRS 07 - IMU's reading should determine the LCD on/off based on the box gesture during lock state.
 
 ### 1.3 Block Diagram (task division)
 
