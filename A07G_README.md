@@ -68,6 +68,8 @@ SRS 07 - IMU's reading should determine the LCD on/off based on the box gesture 
 
 ### 1.4 State machine diagrams
 
+![State machine](State_machine.png)
+
 ## 2. Understanding the Starter Code
 
 ### 2.1 What does “InitializeSerialConsole()” do? In said function, what is “cbufRx” and “cbufTx”? What type of data structure is it?
