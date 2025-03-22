@@ -74,27 +74,51 @@ SRS 07 - IMU's reading should determine the LCD on/off based on the box gesture 
 
 ### 2.1 What does “InitializeSerialConsole()” do? In said function, what is “cbufRx” and “cbufTx”? What type of data structure is it?
 
-1. Initializes the UART：（Baudrate & Pin configuration in ） and registers callbacks.
+Initializes the UART - sets up the SERCOM to act as UART and registers the callbacks for asynchronous reads and writes.
+
+cbufRx and cbufTx are ring buffers to store received characters and characters to be sent.
+
+The type is **cbuf_handle_t**, which is a pointer to circular buffer structure.
 
 ### 2.2 How are “cbufRx” and “cbufTx” initialized? Where is the library that defines them (please list the *C file they come from)
 
-### 2.3 Where are the character arrays where the RX and TX characters are being stored at the end? Please mention their name and size. Tip: Please note cBufRx and cBufTx are structures.
+Use function **circular_buf_init**. From the library **circular_buffer.c** & **circular_buffer.h**.
+
+### 2.3 Where are the character arrays where the RX and TX characters are being stored at the end? Please mention their name and size. Tip: Please note cBufRx and cBufTx are structures
+
+rxCharacterBuffer and txCharacterBuffer. Both of theri size are 512 bytes.
 
 ### 2.4 Where are the interrupts for UART character received and UART character sent defined?
 
+In function **configure_usart_callbacks**.
+
 ### 2.5 What are the callback functions that are called when
 
-- A character is received? (RX)
+- A character is received: **usart_read_callback**.
 
-- A character has been sent? (TX)
+- A character has been sent: **usart_write_callback**.
 
-### 2.6 Explain what is being done on each of these two callbacks and how they relate to the cbufRx and cbufTx buffers.
+### 2.6 Explain what is being done on each of these two callbacks and how they relate to the cbufRx and cbufTx buffers
 
-### 2.7 Draw a diagram that explains the program flow for UART receive – starting with the user typing a character and ending with how that characters ends up in the circular buffer “cbufRx”. Please make reference to specific functions in the starter code.
+**usart_read_callback**:
+
+This function is triggered when receiving a character. The received character should be stored in **cbufRx**  for later retrieval. The function then restart the UART receive job to keep continuously reading incoming characters.
+
+**usart_write_callback**:
+
+This function is triggered when finishing transmitting a character. It checks if there are more characters in **cbufTx** waiting to be sent. If characters remain, it fetches the next character from cbufTx and sends it via UART.
+
+### 2.7 Draw a diagram that explains the program flow for UART receive – starting with the user typing a character and ending with how that characters ends up in the circular buffer “cbufRx”. Please make reference to specific functions in the starter code
+
 
 ### 2.8 Draw a diagram that explains the program flow for the UART transmission – starting from a string added by the program to the circular buffer “cbufTx” and ending on characters being shown on the screen of a PC (On Teraterm, for example). Please make reference to specific functions in the starter code
 
-### 2.9 What is done on the function “startStasks()” in main.c? How many threads are started?
+
+### 2.9 What is done on the function “startTasks()” in main.c? How many threads are started?
+
+Calls xTaskCreate() to create the CLI task and logs the FreeRTOS heap size before & after task creation.
+
+In starter code, only one threads are started.
 
 #### 3.Debug Logger Module
 
@@ -143,4 +167,14 @@ Preview of the code:
 
 ### 4.4 Capture file (i.e., the .sal file) of a wiretapped conversation
 
-The log file is saved in the repo as A07G/decodedMessage.sal.
+The log file is saved in the repo as A07G/decodedMessage.sal
+
+## 5. Complete the CLI
+
+Commit your functioning CLI code to your GitHub repo, and make comments that are in Doxygen style.
+
+## 6. Add CLI commands
+
+### 6.1 Commit your functioning CLI code to your GitHub repo, and make comments that are in Doxygen style
+
+### 6.2 Submit a link to a video of this functionality in your README.md
