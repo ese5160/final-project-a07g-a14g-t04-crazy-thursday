@@ -72,21 +72,73 @@ SRS 07 - IMU's reading should determine the LCD on/off based on the box gesture 
 
 ### 2.1 What does “InitializeSerialConsole()” do? In said function, what is “cbufRx” and “cbufTx”? What type of data structure is it?
 
-### 2.2 How are “cbufRx” and “cbufTx” initialized? Where is the library that defines them (please list the *C file they come from).
+1. Initializes the UART：（Baudrate & Pin configuration in ） and registers callbacks.
+
+### 2.2 How are “cbufRx” and “cbufTx” initialized? Where is the library that defines them (please list the *C file they come from)
 
 ### 2.3 Where are the character arrays where the RX and TX characters are being stored at the end? Please mention their name and size. Tip: Please note cBufRx and cBufTx are structures.
 
 ### 2.4 Where are the interrupts for UART character received and UART character sent defined?
 
-### 2.5 What are the callback functions that are called when:
+### 2.5 What are the callback functions that are called when
 
-a. A character is received? (RX)
-b. A character has been sent? (TX)
+- A character is received? (RX)
+
+- A character has been sent? (TX)
 
 ### 2.6 Explain what is being done on each of these two callbacks and how they relate to the cbufRx and cbufTx buffers.
 
 ### 2.7 Draw a diagram that explains the program flow for UART receive – starting with the user typing a character and ending with how that characters ends up in the circular buffer “cbufRx”. Please make reference to specific functions in the starter code.
 
-### 2.8 Draw a diagram that explains the program flow for the UART transmission – starting from a string added by the program to the circular buffer “cbufTx” and ending on characters being shown on the screen of a PC (On Teraterm, for example). Please make reference to specific functions in the starter code.
+### 2.8 Draw a diagram that explains the program flow for the UART transmission – starting from a string added by the program to the circular buffer “cbufTx” and ending on characters being shown on the screen of a PC (On Teraterm, for example). Please make reference to specific functions in the starter code
 
 ### 2.9 What is done on the function “startStasks()” in main.c? How many threads are started?
+
+#### 3.Debug Logger Module
+
+Preview of the code:
+
+    /**
+    * @brief Logs a message at the specified debug level.
+    */
+    void LogMessage(enum eDebugLogLevels level, const char *format, ...)
+    {
+        if ((level > currentDebugLevel) || (level == currentDebugLevel)){
+            char buffer[TX_BUFFER_SIZE];
+
+            va_list args;
+            va_start(args, format);
+            vsprintf(buffer, format, args);
+            va_end(args);
+            SerialConsoleWriteString(buffer);
+        }
+    }
+
+#### 4. Wiretap the convo
+
+#### 4.1 Short anwsers
+
+- What nets must you attach the logic analyzer to?
+
+    SERCOM4 PAD2 and PAD3.
+
+- Where on the circuit board can you attach / solder to?
+
+    PB10(TX), PB11(RX), GND
+
+- What are critical settings for the logic analyzer?
+
+    Use asynchronous serial mode and set bitrate as 115200 and input channel to be D0(PB10)
+    ![logicAnalyzerSetting](logicAnalyzerSetting.png)
+
+### 4.2 Hardware connections between the SAMW25 Xplained dev board and the logic analyzer
+
+![hardwareConnection](hardwareConnection.jpg)
+
+### 4.3 Screenshot of the decoded message
+
+![decodedMessage](decodedMessage.png)
+
+### 4.4 Capture file (i.e., the .sal file) of a wiretapped conversation
+
+The log file is saved in the repo as A07G/decodedMessage.sal.
