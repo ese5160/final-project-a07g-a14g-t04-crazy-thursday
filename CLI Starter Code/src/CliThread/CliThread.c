@@ -29,12 +29,29 @@ const CLI_Command_Definition_t xClearScreen =
         CLI_CALLBACK_CLEAR_SCREEN,
         CLI_PARAMS_CLEAR_SCREEN};
 
+// Reset command
 static const CLI_Command_Definition_t xResetCommand =
     {
         "reset",
         "reset: Resets the device\r\n",
         (const pdCOMMAND_LINE_CALLBACK)CLI_ResetDevice,
         0};
+
+// Version command
+static const CLI_Command_Definition_t xVersionCommand = 
+	{
+		"version",
+		"version: Prints the current firmware version\r\n",
+		CLI_GetVersion,
+		0};
+
+// Ticks command
+static const CLI_Command_Definition_t xTicksCommand = 
+	{
+		"ticks",
+		"ticks: Prints the number of ticks since the scheduler was started\r\n",
+		CLI_GetTicksNumber,
+		0};
 
 /******************************************************************************
  * Forward Declarations
@@ -54,6 +71,8 @@ void vCommandConsoleTask(void *pvParameters)
 
     FreeRTOS_CLIRegisterCommand(&xClearScreen);
     FreeRTOS_CLIRegisterCommand(&xResetCommand);
+	FreeRTOS_CLIRegisterCommand(&xVersionCommand);
+	FreeRTOS_CLIRegisterCommand(&xTicksCommand);
 
     uint8_t cRxedChar[2], cInputIndex = 0;
     BaseType_t xMoreDataToFollow;
@@ -209,15 +228,28 @@ void vCommandConsoleTask(void *pvParameters)
 
 /**************************************************************************/ /**
  * @fn			void FreeRTOS_read(char* character)
- * @brief		STUDENTS TO COMPLETE. This function block the thread unless we received a character. How can we do this?
-                 There are multiple solutions! Check all the inter-thread communications available! See https://www.freertos.org/a00113.html
- * @details		STUDENTS TO COMPLETE.
+ * @brief		This function block the thread unless we received a character.
+ * @details		
  * @note
  *****************************************************************************/
+extern SemaphoreHandle_t xCliSemaphore;
+extern cbuf_handle_t cbufRx;
+
 static void FreeRTOS_read(char *character)
 {
-    // ToDo: Complete this function
-    vTaskSuspend(NULL); // We suspend ourselves. Please remove this when doing your code
+	uint8_t c;
+	xSemaphoreTake(xCliSemaphore, portMAX_DELAY);
+
+	// Get data from circular buffer
+	if (circular_buf_get(cbufRx, &c) == 0)
+	{
+		*character = (char)c;  // Successfully retrieved character
+	}
+	else
+	{
+		*character = '\0';  // Should not happen, but safety check
+	}
+	
 }
 
 /******************************************************************************
@@ -240,5 +272,29 @@ BaseType_t xCliClearTerminalScreen(char *pcWriteBuffer, size_t xWriteBufferLen, 
 BaseType_t CLI_ResetDevice(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString)
 {
     system_reset();
+    return pdFALSE;
+}
+
+/**************************************************************************//**
+ * @brief  Prints the current firmware version.
+ * @param  pcWriteBuffer  Pointer to output buffer.
+ * @param  xWriteBufferLen  Length of output buffer.
+ * @param  pcCommandString  Command input (not used).
+ * @return pdFALSE (indicating the command is complete).
+ *****************************************************************************/
+BaseType_t CLI_GetVersion(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString) {
+    snprintf((char *)pcWriteBuffer, xWriteBufferLen, "Firmware Version: %s\r\n", FIRMWARE_VERSION);
+    return pdFALSE;
+}
+
+/**************************************************************************//**
+ * @brief  Prints the number of ticks since the scheduler started.
+ * @param  pcWriteBuffer  Pointer to output buffer.
+ * @param  xWriteBufferLen  Length of output buffer.
+ * @param  pcCommandString  Command input (not used).
+ * @return pdFALSE (indicating the command is complete).
+ *****************************************************************************/
+BaseType_t CLI_GetTicksNumber(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString) {
+    snprintf((char *)pcWriteBuffer, xWriteBufferLen, "Ticks: %lu\r\n", xTaskGetTickCount());
     return pdFALSE;
 }

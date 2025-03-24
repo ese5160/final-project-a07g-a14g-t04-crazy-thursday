@@ -12,6 +12,7 @@
 #include "SerialConsole.h"
 #include "FreeRTOS_CLI.h"
 
+#define FIRMWARE_VERSION "0.0.1" ///< Firmware version definition
 
 #define CLI_TASK_SIZE	256		///<STUDENT FILL
 #define CLI_PRIORITY (configMAX_PRIORITIES - 1) ///<STUDENT FILL
@@ -38,7 +39,6 @@ BaseType_t xCliClearTerminalScreen( char *pcWriteBuffer,size_t xWriteBufferLen,c
 #define CLI_CALLBACK_CLEAR_SCREEN		(pdCOMMAND_LINE_CALLBACK)xCliClearTerminalScreen
 #define CLI_PARAMS_CLEAR_SCREEN			0
 
-
 void vCommandConsoleTask( void *pvParameters );
 
 BaseType_t CLI_GetImuData( int8_t *pcWriteBuffer,size_t xWriteBufferLen,const int8_t *pcCommandString );
@@ -48,3 +48,5 @@ BaseType_t CLI_NeotrellProcessButtonBuffer( int8_t *pcWriteBuffer,size_t xWriteB
 BaseType_t CLI_DistanceSensorGetDistance( int8_t *pcWriteBuffer,size_t xWriteBufferLen,const int8_t *pcCommandString );
 BaseType_t CLI_ResetDevice( int8_t *pcWriteBuffer,size_t xWriteBufferLen,const int8_t *pcCommandString );
 BaseType_t CLI_SendDummyGameData( int8_t *pcWriteBuffer,size_t xWriteBufferLen,const int8_t *pcCommandString );
+BaseType_t CLI_GetVersion(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
+BaseType_t CLI_GetTicksNumber(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);

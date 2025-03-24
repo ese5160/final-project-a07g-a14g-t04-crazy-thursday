@@ -27,7 +27,7 @@
  * Includes
  ******************************************************************************/
 #include "SerialConsole.h"
-
+SemaphoreHandle_t xCliSemaphore = NULL;
 /******************************************************************************
  * Defines
  ******************************************************************************/
@@ -84,6 +84,7 @@ void InitializeSerialConsole(void)
     usart_read_buffer_job(&usart_instance, (uint8_t *)&latestRx, 1); // Kicks off constant reading of characters
 
 	// Add any other calls you need to do to initialize your Serial Console
+	xCliSemaphore = xSemaphoreCreateCounting(RX_BUFFER_SIZE, 0);
 }
 
 /**
@@ -151,8 +152,15 @@ void setLogLevel(enum eDebugLogLevels debugLevel)
  */
 void LogMessage(enum eDebugLogLevels level, const char *format, ...)
 {
-    // Todo: Implement Debug Logger
-	// More detailed descriptions are in header file
+    if ((level > currentDebugLevel) || (level == currentDebugLevel)){
+	    char buffer[TX_BUFFER_SIZE];
+
+	    va_list args;
+	    va_start(args, format);
+	    vsprintf(buffer, format, args);
+	    va_end(args);
+		SerialConsoleWriteString(buffer);
+    }
 }
 
 /*
@@ -215,18 +223,34 @@ static void configure_usart_callbacks(void)
 /**
  * @fn			void usart_read_callback(struct usart_module *const usart_module)
  * @brief		Callback called when the system finishes receives all the bytes requested from a UART read job
-		 Students to fill out. Please note that the code here is dummy code. It is only used to show you how some functions work.
  * @note
  *****************************************************************************/
 void usart_read_callback(struct usart_module *const usart_module)
 {
-	// ToDo: Complete this function 
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+	// Attempt to put received character into the circular buffer
+	if (circular_buf_put2(cbufRx, latestRx) == 0)
+	{
+		// Notify the CLI task that new data is available
+		xSemaphoreGiveFromISR(xCliSemaphore, &xHigherPriorityTaskWoken);
+	}
+	else
+	{
+		SerialConsoleWriteString("UART Read Buffer is full.\r\n");// Buffer full, data is lost (a debug log here)
+	}
+
+	// Restart USART read job
+	usart_read_buffer_job(&usart_instance, (uint8_t *)&latestRx, 1);
+
+	// Yield if a higher-priority task should run
+	portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
 /**************************************************************************/ 
 /**
  * @fn			void usart_write_callback(struct usart_module *const usart_module)
- * @brief		Callback called when the system finishes sending all the bytes requested from a UART read job
+ * @brief		Callback called when the system finishes sending all the bytes requested from a UART write job
  * @note
  *****************************************************************************/
 void usart_write_callback(struct usart_module *const usart_module)
