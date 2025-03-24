@@ -239,9 +239,9 @@ static void FreeRTOS_read(char *character)
 {
 	uint8_t c;
 	xSemaphoreTake(xCliSemaphore, portMAX_DELAY);
-
+	
 	// Get data from circular buffer
-	if (circular_buf_get(cbufRx, &c) == 0)
+	if (SerialConsoleReadCharacter(&c) == 0)
 	{
 		*character = (char)c;  // Successfully retrieved character
 	}
@@ -249,7 +249,6 @@ static void FreeRTOS_read(char *character)
 	{
 		*character = '\0';  // Should not happen, but safety check
 	}
-	
 }
 
 /******************************************************************************

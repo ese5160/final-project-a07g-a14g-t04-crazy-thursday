@@ -70,7 +70,13 @@ SRS 07 - IMU's reading should determine the LCD on/off based on the box gesture 
 
 ### 1.4 State machine diagrams
 
+State machine of each task/peripherals:
+
 ![State Machine](State_machine.png)
+
+State machine based on device logic:
+
+![State Machine2](State_machine2.png)
 
 ## 2. Understanding the Starter Code
 
@@ -110,11 +116,13 @@ This function is triggered when receiving a character. The received character sh
 
 This function is triggered when finishing transmitting a character. It checks if there are more characters in **cbufTx** waiting to be sent. If characters remain, it fetches the next character from cbufTx and sends it via UART.
 
-### 2.7 Draw a diagram that explains the program flow for UART receive – starting with the user typing a character and ending with how that characters ends up in the circular buffer “cbufRx”. Please make reference to specific functions in the starter code
+### 2.7 Draw a diagram that explains the program flow for UART receive – starting with the user typing a character and ending with how that characters ends up in the circular buffer “cbufRx”
 
+![Read Flowchart](readFlowchart.png)
 
-### 2.8 Draw a diagram that explains the program flow for the UART transmission – starting from a string added by the program to the circular buffer “cbufTx” and ending on characters being shown on the screen of a PC (On Teraterm, for example). Please make reference to specific functions in the starter code
+### 2.8 Draw a diagram that explains the program flow for the UART transmission – starting from a string added by the program to the circular buffer “cbufTx” and ending on characters being shown on the screen of a PC (On Teraterm, for example)
 
+![Write Flowchart](writeFlowchart.png)
 
 ### 2.9 What is done on the function “startTasks()” in main.c? How many threads are started?
 
@@ -122,7 +130,7 @@ Calls xTaskCreate() to create the CLI task and logs the FreeRTOS heap size befor
 
 In starter code, only one threads are started(CLI Task).
 
-#### 3.Debug Logger Module
+## 3.Debug Logger Module
 
 Preview of the code:
 
@@ -142,9 +150,9 @@ Preview of the code:
         }
     }
 
-#### 4. Wiretap the convo
+## 4. Wiretap the convo
 
-#### 4.1 Short anwsers
+### 4.1 Short anwsers
 
 - What nets must you attach the logic analyzer to?
 
@@ -210,25 +218,23 @@ Preview of the code:
     * @note
     *****************************************************************************/
     extern SemaphoreHandle_t xCliSemaphore;
-    extern cbuf_handle_t cbufRx;
-
+        extern cbuf_handle_t cbufRx;
+        
     static void FreeRTOS_read(char *character)
     {
         uint8_t c;
         xSemaphoreTake(xCliSemaphore, portMAX_DELAY);
-
+        
         // Get data from circular buffer
-        if (circular_buf_get(cbufRx, &c) == 0)
+        if (SerialConsoleReadCharacter(&c) == 0)
         {
             *character = (char)c;  // Successfully retrieved character
         }
         else
         {
             *character = '\0';  // Should not happen, but safety check
-        }
-        
+        }   
     }
-
 ## 6. Add CLI commands
 
 ### 6.1 Functioning CLI code
