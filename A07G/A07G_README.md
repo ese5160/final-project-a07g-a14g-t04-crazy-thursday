@@ -66,9 +66,11 @@ SRS 07 - IMU's reading should determine the LCD on/off based on the box gesture 
 
 ### 1.3 Block Diagram (task division)
 
+![Block Diagram](Block_Diagram.png)
+
 ### 1.4 State machine diagrams
 
-![State machine](State_machine.png)
+![State Machine](State_machine.png)
 
 ## 2. Understanding the Starter Code
 
@@ -118,7 +120,7 @@ This function is triggered when finishing transmitting a character. It checks if
 
 Calls xTaskCreate() to create the CLI task and logs the FreeRTOS heap size before & after task creation.
 
-In starter code, only one threads are started.
+In starter code, only one threads are started(CLI Task).
 
 #### 3.Debug Logger Module
 
@@ -171,10 +173,82 @@ The log file is saved in the repo as A07G/decodedMessage.sal
 
 ## 5. Complete the CLI
 
-Commit your functioning CLI code to your GitHub repo, and make comments that are in Doxygen style.
+Preview of the code:
+
+    /**************************************************************************/ 
+    /**
+    * @fn			void usart_read_callback(struct usart_module *const usart_module)
+    * @brief		Callback called when the system finishes receives all the bytes requested from a UART read job
+    * @note
+    *****************************************************************************/
+    void usart_read_callback(struct usart_module *const usart_module)
+    {
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+        // Attempt to put received character into the circular buffer
+    if (circular_buf_put2(cbufRx, latestRx) == 0)
+        {
+            // Notify the CLI task that new data is available
+            xSemaphoreGiveFromISR(xCliSemaphore, &xHigherPriorityTaskWoken);
+        }
+        else
+        {
+            SerialConsoleWriteString("UART Read Buffer is full.\r\n");// Buffer full, data is lost (a debug log here)
+        }
+
+        // Restart USART read job
+        usart_read_buffer_job(&usart_instance, (uint8_t *)&latestRx, 1);
+
+        // Yield if a higher-priority task should run
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    }
+
+    /**************************************************************************/
+    * @fn			void FreeRTOS_read(char* character)
+    * @brief		This function block the thread unless we received a character.
+    * @details		
+    * @note
+    *****************************************************************************/
+    extern SemaphoreHandle_t xCliSemaphore;
+    extern cbuf_handle_t cbufRx;
+
+    static void FreeRTOS_read(char *character)
+    {
+        uint8_t c;
+        xSemaphoreTake(xCliSemaphore, portMAX_DELAY);
+
+        // Get data from circular buffer
+        if (circular_buf_get(cbufRx, &c) == 0)
+        {
+            *character = (char)c;  // Successfully retrieved character
+        }
+        else
+        {
+            *character = '\0';  // Should not happen, but safety check
+        }
+        
+    }
 
 ## 6. Add CLI commands
 
-### 6.1 Commit your functioning CLI code to your GitHub repo, and make comments that are in Doxygen style
+### 6.1 Functioning CLI code
 
-### 6.2 Submit a link to a video of this functionality in your README.md
+    // Version command
+    static const CLI_Command_Definition_t xVersionCommand = 
+        {
+            "version",
+            "version: Prints the current firmware version\r\n",
+            CLI_GetVersion,
+            0};
+
+    // Ticks command
+    static const CLI_Command_Definition_t xTicksCommand = 
+        {
+            "ticks",
+            "ticks: Prints the number of ticks since the scheduler was started\r\n",
+            CLI_GetTicksNumber,
+            0};
+
+### 6.2 Video of CLI Test
+
+Link to the video: https://drive.google.com/file/d/1xVJVlHg0vayqH7xe8IqdoaMNttBXHMuA/view?usp=sharing
